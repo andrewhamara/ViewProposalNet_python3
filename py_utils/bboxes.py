@@ -1,4 +1,5 @@
 import numpy as np
+np.bool = np.bool_
 
 def bboxes_jaccard(bboxes1, bboxes2):
     """Computing jaccard index (IOU) between bboxes1 and bboxes2.

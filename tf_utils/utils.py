@@ -4,7 +4,7 @@ A set of helper functions for tensorflow
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 #gpu_config:

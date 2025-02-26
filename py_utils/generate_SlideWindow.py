@@ -95,4 +95,4 @@ if __name__ == '__main__':
     BBOXes = generateCandidateCropsForEval([450, 800], scales=[0.7, 0.8,0.9, 1.0])
     # load_utils.save_num_list(BBOXes, 'debug.txt')
     # LoadedBBoxes = load_utils.load_XYXYS_list('debug.txt')
-    print "Done"
+    print("Done")

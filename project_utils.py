@@ -4,7 +4,7 @@ import numpy as np
 
 
 def get_pdefined_anchors(anchor_file):
-    anchors = pickle.load(open(anchor_file, 'rb'))
+    anchors = pickle.load(open(anchor_file, 'rb'), encoding='latin-1')
     anchors = np.array(anchors)
     return anchors
 

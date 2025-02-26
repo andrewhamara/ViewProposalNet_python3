@@ -33,7 +33,7 @@ def viewBBoxes(image_file, bboxes, titles, showImageName=True):
         # Add the patch to the Axes
         ax.add_patch(rect_i)
     plt.show(block=False)
-    input("Press Enter to continue...")
+    eval(input("Press Enter to continue..."))
     plt.close()
 
 

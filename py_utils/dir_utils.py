@@ -58,5 +58,5 @@ class save_places:
         clear_dir(self.summary_save_dir)
         clear_dir(self.log_save_dir)
         clear_dir(self.image_save_dir)
-        print ('Clear stuff in {}'.format(os.path.join(self.save_dir)))
+        print(('Clear stuff in {}'.format(os.path.join(self.save_dir))))
 

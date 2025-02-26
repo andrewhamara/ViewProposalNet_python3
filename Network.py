@@ -1,14 +1,15 @@
 # saves all the utils of the ssd network
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
+import tf_slim as slim
+#import tensorflow.contrib.slim as slim
 # import ndcg_recsys
 
 def base_net_arg_scope():
     with slim.arg_scope([slim.conv2d, slim.fully_connected],
                         activation_fn=tf.nn.relu,
-                        weights_regularizer=slim.l2_regularizer(0.0005),
-                        weights_initializer=tf.contrib.layers.xavier_initializer(),
-                        biases_initializer=tf.zeros_initializer()):
+                        weights_regularizer=tf.keras.regularizers.l2(0.5 * (0.0005)),
+                        weights_initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform"),
+                        biases_initializer=tf.compat.v1.zeros_initializer()):
         with slim.arg_scope([slim.conv2d, slim.max_pool2d],
                             padding='SAME') as sc:
                 return sc
@@ -24,7 +25,7 @@ def base_net(inputs,
             scope='ssd_300_vgg'):
     with slim.arg_scope(base_net_arg_scope()):
         end_points = {}
-        with tf.variable_scope(scope, 'ssd_300_vgg', [inputs], reuse=reuse):
+        with tf.compat.v1.variable_scope(scope, 'ssd_300_vgg', [inputs], reuse=reuse):
             # Original VGG-16 blocks.
             net = slim.repeat(inputs, 2, slim.conv2d, 64, [3, 3], scope='conv1')
             end_points['block1'] = net
@@ -56,7 +57,7 @@ def base_net(inputs,
 
             # Block 8.
             end_point = 'block8'
-            with tf.variable_scope(end_point):
+            with tf.compat.v1.variable_scope(end_point):
                 net = slim.conv2d(net, 256, [1, 1], scope='conv1x1')
                 net = slim.conv2d(net, 512, [3, 3], stride=2, scope='conv3x3', padding='VALID')
                 tf.summary.histogram('block8', net)
@@ -64,13 +65,13 @@ def base_net(inputs,
 
             # prediction part
             end_point = 'prediction'
-            with tf.variable_scope(end_point):
+            with tf.compat.v1.variable_scope(end_point):
                 net = end_points['block8']
                 net = slim.dropout(net, dropout_keep_prob, is_training=is_training, scope='dropout1')
                 tf.summary.histogram('block8_dp', net)
                 net = slim.conv2d(net, 1024, [9, 9], padding='VALID', scope='conv9x9')
                 tf.summary.histogram('pred9x9', net)
-                net = tf.reduce_mean(net, axis=[1, 2], keep_dims=True)
+                net = tf.reduce_mean(net, axis=[1, 2], keepdims=True)
                 net = slim.dropout(net, dropout_keep_prob, is_training=is_training, scope='dropout2')
                 net = slim.conv2d(net, num_classes, [1, 1], scope='fc')
             end_points[end_point] = net
@@ -79,11 +80,11 @@ def base_net(inputs,
             if not (rois is None):
                 #todo: assume the batch size is 1
                 end_point = 'fast_rcnn'
-                with tf.variable_scope(end_point):
+                with tf.compat.v1.variable_scope(end_point):
                     net = end_points['block8']
-                    net = tf.image.resize_images(net, [32, 32])
+                    net = tf.image.resize(net, [32, 32])
                     rois_yxyx = rois[:, [1, 0, 3, 2]]
-                    net = tf.image.crop_and_resize(net, boxes=rois_yxyx, crop_size=[3,3], box_ind=tf.zeros(shape=[num_classes], dtype=tf.int32))
+                    net = tf.image.crop_and_resize(net, boxes=rois_yxyx, crop_size=[3,3], box_indices=tf.zeros(shape=[num_classes], dtype=tf.int32))
                     # this dropout is not good enough for limited data
                     #TODO: using 1024 is for pairwise-frcnn-dp(dropout + large)
                     #TODO: there are different versions: dp+1024/128/1024+dp+128+dp
@@ -104,11 +105,11 @@ def base_net(inputs,
             if bbox_regression:
                 #todo: assume the batch size is 1
                 end_point = 'bbox_regression'
-                with tf.variable_scope(end_point):
+                with tf.compat.v1.variable_scope(end_point):
                     net = end_points['block8']
-                    net = tf.image.resize_images(net, [32, 32])
+                    net = tf.image.resize(net, [32, 32])
                     rois_yxyx = rois[:, [1, 0, 3, 2]]
-                    net = tf.image.crop_and_resize(net, boxes=rois_yxyx, crop_size=[3,3], box_ind=tf.zeros(shape=[num_classes], dtype=tf.int32))
+                    net = tf.image.crop_and_resize(net, boxes=rois_yxyx, crop_size=[3,3], box_indices=tf.zeros(shape=[num_classes], dtype=tf.int32))
                     # net = slim.conv2d(net, 1024, [3, 3], padding='SAME', scope='conv3x3')
                     # net = slim.dropout(net, dropout_keep_prob, is_training=is_training, scope='dropout_breg')
                     net = slim.conv2d(net, 128, [3, 3], padding='VALID', scope='conv1x1_2')
@@ -123,7 +124,7 @@ def base_net(inputs,
 
 
 def swap_correct(logits, labels, batch_size, n_anchors=895, scope=None):
-    with tf.variable_scope(scope, 'swap_correct'):
+    with tf.compat.v1.variable_scope(scope, 'swap_correct'):
         logits_offset0 = logits[:, 0:n_anchors-1]
         logits_offset1 = logits[:, 1:n_anchors]
 
@@ -143,8 +144,8 @@ def swap_correct(logits, labels, batch_size, n_anchors=895, scope=None):
 def mean_pairwise_squared_error(logits, gclasses, alpha=1., scope=None):
     """continious pairwise loss:
     """
-    with tf.variable_scope(scope, 'mean_pairwise_square_error'):
-        total_loss = tf.losses.mean_pairwise_squared_error(gclasses, logits, weights=alpha)
+    with tf.compat.v1.variable_scope(scope, 'mean_pairwise_square_error'):
+        total_loss = tf.compat.v1.losses.mean_pairwise_squared_error(gclasses, logits, weights=alpha)
     return total_loss
 
 
@@ -159,7 +160,7 @@ def bbox_reg_loss(pred_xywh, labels, anchor_xywh, nearest_xywh):
     nearest_wh = nearest_xywh[:, 2:4]
     diff_xy = sig_pred_xy - 0.5 + anchor_xy - nearest_xy
     diff_wh = exp_pred_wh - nearest_wh / anchor_wh
-    loss = tf.multiply(tf.reduce_sum(abs_smooth(diff_xy), 1, keep_dims=True) + tf.reduce_sum(abs_smooth(diff_wh), 1, keep_dims=True), labels)
+    loss = tf.multiply(tf.reduce_sum(abs_smooth(diff_xy), 1, keepdims=True) + tf.reduce_sum(abs_smooth(diff_wh), 1, keepdims=True), labels)
 
     return tf.reduce_sum(loss)
 

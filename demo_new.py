@@ -1,11 +1,14 @@
 import os
 import sys
 sys.path.append((os.path.dirname(__file__)))
-import tensorflow as tf
 import numpy as np
-import tensorflow.contrib.slim as slim
+
+import tensorflow.compat.v1 as tf
+import tf_slim as slim
+#import tensorflow.compat.v1.contrib.slim as slim
+flags = tf.compat.v1.app.flags
+
 import Network
-flags = tf.app.flags
 from py_utils import bboxes as boxes
 import project_utils
 import datasets.proposal_data_transforms as transforms
@@ -24,7 +27,7 @@ def main(argv=None):
     result_save_directory = 'ProposalResults'
     save_file = os.path.join(result_save_directory, 'ViewProposalResults-tmp.txt')
     anchors = project_utils.get_pdefined_anchors(anchor_file='datasets/pdefined_anchor.pkl')
-    model_weight_path = './pretrained/ProposalNet/VPN'
+    model_weight_path = 'pretrained/model_params/ProposalNet/VPN'
 
     # Machine Learning Cores:
     data_transform = transforms.get_val_transform(image_size=320)
@@ -32,8 +35,8 @@ def main(argv=None):
 
     with tf.Graph().as_default():
         # not using batch yet
-        with tf.variable_scope('inputs'):
-            tf_image = tf.placeholder(dtype=tf.float32, shape=[1, None, None, 3], name='image_input')
+        with tf.compat.v1.variable_scope('inputs'):
+            tf_image = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, None, None, 3], name='image_input')
 
         p_logits, _, _, _ = Network.base_net(tf_image, num_classes=len(anchors), rois=None, is_training=False, bbox_regression=False)
 
@@ -45,8 +48,8 @@ def main(argv=None):
         config = tf_utils.gpu_config(gpu_id=gpu_id)
         image_annotation = {}
 
-        with tf.Session(config=config) as sess:
-            sess.run(tf.global_variables_initializer())
+        with tf.compat.v1.Session(config=config) as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
             init_fn(sess)
             # pbar = progressbar.ProgressBar(max_value=len(image_list))
             for id, s_image_path in enumerate(image_list):
@@ -78,7 +81,7 @@ def main(argv=None):
                     image_annotation[s_image_name] = {}
                     image_annotation[s_image_name]['scores'] = scores_selected[0:pick_n]
                     image_annotation[s_image_name]['bboxes'] = bboxes_selected[0:pick_n]
-        print("Done Computing, saving to {:s}".format(save_file))
+        print(("Done Computing, saving to {:s}".format(save_file)))
         load_utils.save_json(image_annotation, save_file)
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()
