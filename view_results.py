@@ -33,7 +33,7 @@ def viewBBoxes(image_file, bboxes, titles, showImageName=True):
         # Add the patch to the Axes
         ax.add_patch(rect_i)
     plt.show(block=False)
-    raw_input("Press Enter to continue...")
+    input("Press Enter to continue...")
     plt.close()
 
 
@@ -42,7 +42,7 @@ annotation_path = 'ProposalResults/ViewProposalResults-tmp.txt'
 image_path_root = '/home/zwei/Dev/CVPR18_release/tmp'
 
 image_data = load_utils.load_json(annotation_path)
-image_name_list = image_data.keys()
+image_name_list = list(image_data.keys())
 image_name_list.sort()
 for idx, image_name in enumerate(image_name_list):
     if idx<20:
@@ -52,5 +52,5 @@ for idx, image_name in enumerate(image_name_list):
     scores = image_data[image_name]['scores']
     viewBBoxes(s_image_path, bboxes, scores)
 
-print "DEBUG"
+print("DEBUG")
 

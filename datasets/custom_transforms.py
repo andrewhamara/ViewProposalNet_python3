@@ -1,4 +1,4 @@
-from __future__ import division
+
 import torch
 import math
 import random
@@ -343,4 +343,4 @@ if __name__ == '__main__':
     # image_tensor = transforms.ToTensor()(image)
     # addGaussian = AddGaussianNoise()
     # output_image = addGaussian(image_tensor)
-    print "DB"
+    print("DB")

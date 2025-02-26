@@ -78,7 +78,7 @@ def main(argv=None):
                     image_annotation[s_image_name] = {}
                     image_annotation[s_image_name]['scores'] = scores_selected[0:pick_n]
                     image_annotation[s_image_name]['bboxes'] = bboxes_selected[0:pick_n]
-        print "Done Computing, saving to {:s}".format(save_file)
+        print("Done Computing, saving to {:s}".format(save_file))
         load_utils.save_json(image_annotation, save_file)
 if __name__ == '__main__':
     tf.app.run()

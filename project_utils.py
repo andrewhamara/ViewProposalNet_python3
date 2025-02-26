@@ -28,4 +28,4 @@ def get_pdefined_anchors(anchor_file):
 
 if __name__ == '__main__':
     anchors = get_pdefined_anchors_xywh()
-    print "DEBUG"
+    print("DEBUG")
